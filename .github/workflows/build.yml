@@ -28,13 +28,15 @@ jobs:
             libssl-dev \
             && rm -rf /var/lib/apt/lists/*
         
-        # Install Solana CLI
-        RUN sh -c "$(curl -sSfL https://release.solana.com/v1.18.4/install)"
+        # Install Solana CLI and toolchain
+        RUN wget -O solana-install-init https://github.com/solana-labs/solana/releases/download/v1.18.4/solana-install-init-x86_64-unknown-linux-gnu
+        RUN chmod +x solana-install-init
+        RUN ./solana-install-init v1.18.4
         ENV PATH="/root/.local/share/solana/install/active_release/bin:$PATH"
         
-        # Install Solana toolchain
-        RUN rustup toolchain install solana
-        RUN rustup default solana
+        # Install Solana toolchain components
+        RUN cargo install --git https://github.com/solana-labs/solana.git solana-cargo-build-sbf --locked
+        RUN cargo install --git https://github.com/solana-labs/solana.git solana-cargo-test-sbf --locked
         
         # Install Anchor
         RUN cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
