@@ -21,13 +21,15 @@ jobs:
           rust:1.90.0-slim \
           bash -c "
             apt-get update && apt-get install -y curl wget build-essential pkg-config libssl-dev
-            sh -c \"\$(curl -sSfL https://release.solana.com/v1.18.4/install)\"
+            # Try installing Solana using wget instead of curl
+            echo 'Installing Solana using wget...'
+            wget -O - https://release.solana.com/v1.18.4/install | sh
             export PATH=\"/root/.local/share/solana/install/active_release/bin:\$PATH\"
             # Check what's actually installed
             echo 'Checking Solana installation:'
-            ls -la /root/.local/share/solana/install/active_release/bin/ | grep cargo
+            ls -la /root/.local/share/solana/install/active_release/bin/ | grep cargo || echo 'No cargo files found'
             echo 'Available cargo commands:'
-            cargo --list | grep build
+            cargo --list | grep build || echo 'No build commands found'
             # Try to find and use the correct build command
             if command -v cargo-build-sbf &> /dev/null; then
               echo 'Found cargo-build-sbf, using it directly'
