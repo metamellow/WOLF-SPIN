@@ -23,6 +23,8 @@ jobs:
             apt-get update && apt-get install -y curl wget build-essential pkg-config libssl-dev
             sh -c \"\$(curl -sSfL https://release.solana.com/v1.18.4/install)\"
             export PATH=\"/root/.local/share/solana/install/active_release/bin:\$PATH\"
+            cargo install --git https://github.com/solana-labs/solana.git solana-cargo-build-sbf --locked
+            cargo install --git https://github.com/solana-labs/solana.git solana-cargo-test-sbf --locked
             cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
             avm install 0.31.1
             avm use 0.31.1
