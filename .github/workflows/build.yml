@@ -16,10 +16,18 @@ jobs:
     
     - name: Build with Docker
       run: |
-        # Use pre-built Solana Docker image that has everything working
+        # Use a development-focused Docker image
         docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace \
-          solanalabs/solana:v1.18.4 \
-          bash -c "cd spin_wheel && anchor build"
+          rust:1.90.0-slim \
+          bash -c "
+            apt-get update && apt-get install -y curl wget build-essential pkg-config libssl-dev
+            sh -c \"\$(curl -sSfL https://release.solana.com/v1.18.4/install)\"
+            export PATH=\"/root/.local/share/solana/install/active_release/bin:\$PATH\"
+            cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
+            avm install 0.31.1
+            avm use 0.31.1
+            cd spin_wheel && anchor build
+          "
     
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
