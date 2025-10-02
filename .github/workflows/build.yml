@@ -16,41 +16,9 @@ jobs:
     
     - name: Build with Docker
       run: |
-        # Create a simple Dockerfile for building
-        cat > Dockerfile << 'EOF'
-        FROM rust:1.75.0-slim
-        
-        # Install system dependencies
-        RUN apt-get update && apt-get install -y \
-            curl \
-            wget \
-            build-essential \
-            pkg-config \
-            libssl-dev \
-            && rm -rf /var/lib/apt/lists/*
-        
-        # Install Solana CLI
-        RUN wget -O solana-install-init https://github.com/solana-labs/solana/releases/download/v1.18.4/solana-install-init-x86_64-unknown-linux-gnu
-        RUN chmod +x solana-install-init
-        RUN ./solana-install-init v1.18.4
-        ENV PATH="/root/.local/share/solana/install/active_release/bin:$PATH"
-        
-        # Install Solana toolchain components (should work with older Rust)
-        RUN cargo install --git https://github.com/solana-labs/solana.git solana-cargo-build-sbf --locked
-        RUN cargo install --git https://github.com/solana-labs/solana.git solana-cargo-test-sbf --locked
-        
-        # Install Anchor
-        RUN cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
-        RUN avm install 0.31.1
-        RUN avm use 0.31.1
-        
-        WORKDIR /workspace
-        EOF
-        
-        # Build and run the Docker container
-        docker build -t solana-builder .
+        # Use pre-built Solana Docker image that has everything working
         docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace \
-          solana-builder \
+          solanalabs/solana:v1.18.4 \
           bash -c "cd spin_wheel && anchor build"
     
     - name: Upload build artifacts
