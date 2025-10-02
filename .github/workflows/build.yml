@@ -19,13 +19,19 @@ jobs:
       with:
         components: rustfmt, clippy
     
-    - name: Install Solana CLI and toolchain
+    - name: Install Solana CLI
       run: |
-        sh -c "$(curl -sSfL https://release.solana.com/v1.18.4/install)"
+        # Download and install Solana CLI directly
+        wget -O solana-install-init https://github.com/solana-labs/solana/releases/download/v1.18.4/solana-install-init-x86_64-unknown-linux-gnu
+        chmod +x solana-install-init
+        ./solana-install-init v1.18.4
         echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-        # Install Solana toolchain for Rust
-        rustup toolchain install solana
-        rustup default solana
+    
+    - name: Install Solana toolchain
+      run: |
+        # Install Solana toolchain components
+        cargo install --git https://github.com/solana-labs/solana.git solana-cargo-build-sbf --locked
+        cargo install --git https://github.com/solana-labs/solana.git solana-cargo-test-sbf --locked
         # Verify installation
         cargo build-sbf --version
     
