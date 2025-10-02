@@ -14,37 +14,11 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@stable
-      with:
-        components: rustfmt, clippy
-    
-    - name: Install Solana CLI
+    - name: Build with Docker
       run: |
-        # Download and install Solana CLI directly
-        wget -O solana-install-init https://github.com/solana-labs/solana/releases/download/v1.18.4/solana-install-init-x86_64-unknown-linux-gnu
-        chmod +x solana-install-init
-        ./solana-install-init v1.18.4
-        echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-    
-    - name: Install Solana toolchain
-      run: |
-        # Install Solana toolchain components
-        cargo install --git https://github.com/solana-labs/solana.git solana-cargo-build-sbf --locked
-        cargo install --git https://github.com/solana-labs/solana.git solana-cargo-test-sbf --locked
-        # Verify installation
-        cargo build-sbf --version
-    
-    - name: Install Anchor
-      run: |
-        cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
-        avm install 0.31.1
-        avm use 0.31.1
-    
-    - name: Build program
-      run: |
-        cd spin_wheel
-        anchor build
+        docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace \
+          ghcr.io/coral-xyz/anchor:0.31.1 \
+          bash -c "cd spin_wheel && anchor build"
     
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
