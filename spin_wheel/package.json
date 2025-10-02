@@ -1,0 +1,24 @@
+{
+  "name": "spin-wheel-tests",
+  "version": "1.0.0",
+  "description": "Test suite for WOLF SPIN Solana DApp",
+  "main": "tests/spin_wheel.ts",
+  "scripts": {
+    "test": "anchor test",
+    "test:local": "anchor test --skip-local-validator",
+    "build": "anchor build",
+    "deploy": "anchor deploy"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.31.1",
+    "@solana/web3.js": "^1.95.2",
+    "@solana/spl-token": "^0.4.8",
+    "mocha": "^10.2.0",
+    "typescript": "^5.3.3",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^20.10.6"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2"
+  }
+}
