@@ -6,24 +6,24 @@ export default {
   ],
   theme: {
     extend: {
-      colors: {
-        'wolf-black': '#000000',
-        'wolf-white': '#ffffff',
-        'wolf-gray': {
-          50: '#f9f9f9',
-          100: '#f3f3f3',
-          200: '#e5e5e5',
-          300: '#d4d4d4',
-          400: '#a3a3a3',
-          500: '#737373',
-          600: '#525252',
-          700: '#404040',
-          800: '#262626',
-          900: '#171717',
-        }
+      animation: {
+        'spin-slow': 'spin 3s linear infinite',
+        'bounce-slow': 'bounce 2s infinite',
+        'pulse-slow': 'pulse 3s infinite',
       },
-      fontFamily: {
-        'sans': ['Inter', 'system-ui', 'sans-serif'],
+      colors: {
+        'wolf': {
+          50: '#fef7ee',
+          100: '#fdedd3',
+          200: '#fbd7a5',
+          300: '#f8bb6d',
+          400: '#f59533',
+          500: '#f2750b',
+          600: '#e35a01',
+          700: '#bc4202',
+          800: '#953408',
+          900: '#782c0b',
+        }
       }
     },
   },

@@ -1,14 +1,36 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
+import { useProgram } from '../hooks/useProgram'
 
 const BettingWheel: React.FC = () => {
-  const { connected, publicKey } = useWallet()
+  const { connected } = useWallet()
+  const { gameState, poolInfo, loading, error, initializeGame, spinWheel } = useProgram()
   const [betAmount, setBetAmount] = useState('')
   const [isSpinning, setIsSpinning] = useState(false)
   const [result, setResult] = useState<any>(null)
   const [wheelRotation, setWheelRotation] = useState(0)
-  const [poolBalance, setPoolBalance] = useState(1000000) // Mock pool balance
+
+  console.log('BettingWheel render:', { connected, gameState, poolInfo, loading, error })
+
+  // Show a simple fallback if there's an error
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="text-red-600 text-6xl mb-4">⚠️</div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Error</h1>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="bg-gray-900 text-white px-6 py-3 rounded-lg hover:bg-gray-800"
+          >
+            Reload Page
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   // Wheel segments with proper distribution
   const segments = [
@@ -19,11 +41,11 @@ const BettingWheel: React.FC = () => {
   ]
 
   const handleSpin = async () => {
-    if (!connected || !betAmount) return
+    if (!connected || !betAmount || !poolInfo) return
     
-    const bet = parseFloat(betAmount)
-    const minBet = Math.max(100000, poolBalance / 1000) // 0.1% of pool
-    const maxBet = poolBalance / 8 // 12.5% of pool
+    const bet = parseFloat(betAmount) * 1e9 // Convert to lamports
+    const minBet = poolInfo.minBet
+    const maxBet = poolInfo.maxBet
     
     if (bet < minBet) {
       alert(`Minimum bet: ${(minBet / 1e9).toFixed(4)} WOLF`)
@@ -38,33 +60,34 @@ const BettingWheel: React.FC = () => {
     setIsSpinning(true)
     setResult(null)
     
-    // Generate random result
-    const random = Math.random() * 100
-    let selectedSegment = segments[0] // Default to loss
-    
-    if (random < 10) selectedSegment = segments[3] // 4x
-    else if (random < 20) selectedSegment = segments[2] // 2x  
-    else if (random < 40) selectedSegment = segments[1] // 1.2x
-    // else selectedSegment = segments[0] // Loss (60%)
-    
-    // Calculate final rotation (multiple spins + segment position)
-    const spins = 5 + Math.random() * 5 // 5-10 spins
-    const finalRotation = (spins * 360) + (360 - selectedSegment.angle) + (Math.random() * 36)
-    
-    setWheelRotation(prev => prev + finalRotation)
-    
-    // Simulate spin delay
-    setTimeout(() => {
-      const payout = selectedSegment.multiplier * bet
+    try {
+      // Start wheel animation
+      const spins = 5 + Math.random() * 5 // 5-10 spins
+      const randomAngle = Math.random() * 360
+      const finalRotation = (spins * 360) + randomAngle
+      setWheelRotation(prev => prev + finalRotation)
+      
+      // Call the real program
+      const tx = await spinWheel(bet)
+      console.log('Spin transaction:', tx)
+      
+      // The result will be updated when the program emits the SpinResult event
+      // For now, we'll show a success message
       setResult({
-        outcome: selectedSegment.label,
-        multiplier: selectedSegment.multiplier,
-        payout: payout,
-        bet: bet,
-        profit: payout - bet
+        outcome: 'Transaction submitted',
+        multiplier: 0,
+        payout: 0,
+        bet: bet / 1e9,
+        profit: 0,
+        tx
       })
+      
+    } catch (err) {
+      console.error('Spin failed:', err)
+      alert(`Spin failed: ${err instanceof Error ? err.message : 'Unknown error'}`)
+    } finally {
       setIsSpinning(false)
-    }, 3000)
+    }
   }
 
   if (!connected) {
@@ -79,6 +102,49 @@ const BettingWheel: React.FC = () => {
           <h1 className="text-4xl font-bold text-gray-900 mb-4">WOLF SPIN</h1>
           <p className="text-xl text-gray-600 mb-8">In $WOLF We Trust</p>
           <WalletMultiButton className="!bg-black !text-white hover:!bg-gray-800 !px-8 !py-4 !text-lg !rounded-xl" />
+        </div>
+      </div>
+    )
+  }
+
+  // Show loading state
+  if (loading && !gameState) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <p className="text-lg text-gray-600">Loading game state...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show initial loading state
+  if (!connected && !loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="text-center">
+          <div className="animate-pulse rounded-full h-12 w-12 bg-gray-300 mx-auto mb-4"></div>
+          <p className="text-lg text-gray-600">Initializing...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="text-red-600 text-6xl mb-4">⚠️</div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Error</h1>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="bg-gray-900 text-white px-6 py-3 rounded-lg hover:bg-gray-800"
+          >
+            Retry
+          </button>
         </div>
       </div>
     )
@@ -101,10 +167,29 @@ const BettingWheel: React.FC = () => {
           <div className="flex items-center justify-center space-x-4">
             <WalletMultiButton className="!bg-black !text-white hover:!bg-gray-800 !px-6 !py-3 !rounded-lg" />
             <div className="text-sm text-gray-500">
-              Pool: {(poolBalance / 1e9).toFixed(2)} WOLF
+              Pool: {poolInfo ? (poolInfo.balance / 1e9).toFixed(2) : '0.00'} WOLF
             </div>
           </div>
         </div>
+
+        {/* Game not initialized */}
+        {!gameState && (
+          <div className="bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-8 mb-8">
+            <h3 className="text-2xl font-bold text-yellow-800 mb-4 text-center">Game Not Initialized</h3>
+            <p className="text-yellow-700 mb-6 text-center">
+              The game needs to be initialized before you can start playing. This only needs to be done once.
+            </p>
+            <div className="flex justify-center space-x-4">
+              <button
+                onClick={initializeGame}
+                disabled={loading}
+                className="bg-yellow-600 text-white px-6 py-3 rounded-lg hover:bg-yellow-700 disabled:opacity-50"
+              >
+                {loading ? 'Initializing...' : 'Initialize Game'}
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
           {/* Wheel Section */}
@@ -121,7 +206,6 @@ const BettingWheel: React.FC = () => {
                 {/* Segments */}
                 {segments.map((segment, index) => {
                   const startAngle = segments.slice(0, index).reduce((acc, s) => acc + s.angle, 0)
-                  const endAngle = startAngle + segment.angle
                   
                   return (
                     <div
@@ -240,15 +324,21 @@ const BettingWheel: React.FC = () => {
               <div className="space-y-4">
                 <div className="flex justify-between items-center py-3 border-b border-gray-200">
                   <span className="text-lg font-medium">Pool Balance:</span>
-                  <span className="text-xl font-bold">{(poolBalance / 1e9).toFixed(2)} WOLF</span>
+                  <span className="text-xl font-bold">
+                    {poolInfo ? (poolInfo.balance / 1e9).toFixed(2) : '0.00'} WOLF
+                  </span>
                 </div>
                 <div className="flex justify-between items-center py-3 border-b border-gray-200">
                   <span className="text-lg font-medium">Min Bet:</span>
-                  <span className="text-lg">{(poolBalance / 1000 / 1e9).toFixed(4)} WOLF</span>
+                  <span className="text-lg">
+                    {poolInfo ? (poolInfo.minBet / 1e9).toFixed(4) : '0.0000'} WOLF
+                  </span>
                 </div>
                 <div className="flex justify-between items-center py-3">
                   <span className="text-lg font-medium">Max Bet:</span>
-                  <span className="text-lg">{(poolBalance / 8 / 1e9).toFixed(2)} WOLF</span>
+                  <span className="text-lg">
+                    {poolInfo ? (poolInfo.maxBet / 1e9).toFixed(2) : '0.00'} WOLF
+                  </span>
                 </div>
               </div>
             </div>
@@ -260,3 +350,4 @@ const BettingWheel: React.FC = () => {
 }
 
 export default BettingWheel
+

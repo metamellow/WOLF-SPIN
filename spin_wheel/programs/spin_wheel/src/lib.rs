@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Token, TokenAccount, Transfer, Mint};
 use anchor_lang::solana_program::hash::hash;
 
-declare_id!("Gyhbh49KVyGUeonfbEDhnQrP3AmqPqMfZrHVtrRTxQFk");
+declare_id!("8sBBFZcLgMA8mXZCZ8q6L2o27sqSPJEqgSa9G2gvdKNu");
 
 #[program]
 pub mod spin_wheel {

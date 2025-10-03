@@ -6,7 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-spin_wheel = "Gyhbh49KVyGUeonfbEDhnQrP3AmqPqMfZrHVtrRTxQFk"
+spin_wheel = "8sBBFZcLgMA8mXZCZ8q6L2o27sqSPJEqgSa9G2gvdKNu"
 
 [registry]
 url = "https://api.apr.dev"
