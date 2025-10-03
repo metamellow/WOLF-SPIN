@@ -1,0 +1,78 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar for black & white theme */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f3f3f3;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #000000;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #404040;
+}
+
+/* Button styles */
+.btn-primary {
+  @apply bg-wolf-black text-wolf-white px-6 py-3 rounded-lg font-medium hover:bg-wolf-gray-800 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-secondary {
+  @apply bg-wolf-white text-wolf-black border-2 border-wolf-black px-6 py-3 rounded-lg font-medium hover:bg-wolf-gray-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+/* Input styles */
+.input-field {
+  @apply w-full px-4 py-3 border-2 border-wolf-gray-300 rounded-lg focus:border-wolf-black focus:outline-none transition-colors duration-200;
+}
+
+/* Card styles */
+.card {
+  @apply bg-wolf-white border-2 border-wolf-gray-200 rounded-xl p-6 shadow-sm;
+}
+
+/* Smooth wheel rotation */
+.wheel-smooth {
+  transition: transform 3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Glow effect for active wheel */
+.wheel-glow {
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Pulse animation for spin button */
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.spin-pulse {
+  animation: pulse 0.5s ease-in-out;
+}
