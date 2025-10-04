@@ -141,7 +141,7 @@ export const useProgram = () => {
       const funderTokenAccount = await getAssociatedTokenAddress(WOLF_TOKEN_MINT, publicKey)
 
       const tx = await programContext.program.methods
-        .fundPool(amount)
+        .fund_pool(amount)
         .accounts({
           gameState: gameStatePDA,
           rewardPool: rewardPoolPDA,

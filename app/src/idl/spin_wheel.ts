@@ -1,116 +1,252 @@
 export const IDL = {
-  "version": "0.1.0",
-  "name": "spin_wheel",
+  "address": "8sBBFZcLgMA8mXZCZ8q6L2o27sqSPJEqgSa9G2gvdKNu",
+  "metadata": {
+    "name": "spin_wheel",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
   "instructions": [
     {
-      "name": "initialize",
+      "name": "fund_pool",
+      "discriminator": [
+        36,
+        57,
+        233,
+        176,
+        181,
+        20,
+        87,
+        159
+      ],
       "accounts": [
         {
-          "name": "gameState",
-          "isMut": true,
-          "isSigner": false
+          "name": "game_state",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
         },
         {
-          "name": "wolfTokenMint",
-          "isMut": false,
-          "isSigner": false
+          "name": "reward_pool",
+          "writable": true
         },
         {
-          "name": "rewardPool",
-          "isMut": true,
-          "isSigner": false
+          "name": "funder_token_account",
+          "writable": true
+        },
+        {
+          "name": "funder",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "initialize",
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "game_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "wolf_token_mint"
+        },
+        {
+          "name": "reward_pool",
+          "writable": true,
+          "signer": true
         },
         {
           "name": "authority",
-          "isMut": true,
-          "isSigner": true
+          "writable": true,
+          "signer": true
         },
         {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         },
         {
           "name": "rent",
-          "isMut": false,
-          "isSigner": false
+          "address": "SysvarRent111111111111111111111111111111111"
         }
       ],
       "args": []
     },
     {
       "name": "spin",
+      "discriminator": [
+        87,
+        64,
+        120,
+        10,
+        25,
+        224,
+        122,
+        93
+      ],
       "accounts": [
         {
-          "name": "gameState",
-          "isMut": true,
-          "isSigner": false
+          "name": "game_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
         },
         {
-          "name": "rewardPool",
-          "isMut": true,
-          "isSigner": false
+          "name": "reward_pool",
+          "writable": true
         },
         {
-          "name": "playerTokenAccount",
-          "isMut": true,
-          "isSigner": false
+          "name": "player_token_account",
+          "writable": true
         },
         {
-          "name": "devFeeAccount",
-          "isMut": true,
-          "isSigner": false
+          "name": "dev_fee_account",
+          "writable": true
         },
         {
           "name": "player",
-          "isMut": true,
-          "isSigner": true
+          "writable": true,
+          "signer": true
         },
         {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
       "args": [
         {
-          "name": "betAmount",
+          "name": "bet_amount",
           "type": "u64"
         }
       ]
     },
     {
-      "name": "withdrawProfits",
+      "name": "withdraw_profits",
+      "discriminator": [
+        233,
+        0,
+        237,
+        50,
+        45,
+        56,
+        17,
+        250
+      ],
       "accounts": [
         {
-          "name": "gameState",
-          "isMut": false,
-          "isSigner": false
+          "name": "game_state",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
         },
         {
-          "name": "rewardPool",
-          "isMut": true,
-          "isSigner": false
+          "name": "reward_pool",
+          "writable": true
         },
         {
-          "name": "authorityTokenAccount",
-          "isMut": true,
-          "isSigner": false
+          "name": "authority_token_account",
+          "writable": true
         },
         {
           "name": "authority",
-          "isMut": true,
-          "isSigner": true
+          "writable": true,
+          "signer": true
         },
         {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
       "args": [
@@ -119,41 +255,35 @@ export const IDL = {
           "type": "u64"
         }
       ]
-    },
+    }
+  ],
+  "accounts": [
     {
-      "name": "fundPool",
-      "accounts": [
-        {
-          "name": "gameState",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rewardPool",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "funderTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "funder",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "amount",
-          "type": "u64"
-        }
+      "name": "GameState",
+      "discriminator": [
+        144,
+        94,
+        208,
+        172,
+        248,
+        99,
+        134,
+        120
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "SpinResult",
+      "discriminator": [
+        187,
+        207,
+        210,
+        25,
+        66,
+        15,
+        173,
+        156
       ]
     }
   ],
@@ -202,6 +332,76 @@ export const IDL = {
       "code": 6008,
       "name": "InvalidDevAccount",
       "msg": "Invalid dev fee account"
+    }
+  ],
+  "types": [
+    {
+      "name": "GameState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "wolf_token_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "reward_pool",
+            "type": "pubkey"
+          },
+          {
+            "name": "total_spins",
+            "type": "u64"
+          },
+          {
+            "name": "dev_fees_collected",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SpinResult",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "player",
+            "type": "pubkey"
+          },
+          {
+            "name": "bet_amount",
+            "type": "u64"
+          },
+          {
+            "name": "multiplier",
+            "type": "u64"
+          },
+          {
+            "name": "payout",
+            "type": "u64"
+          },
+          {
+            "name": "random_number",
+            "type": "u8"
+          },
+          {
+            "name": "outcome",
+            "type": "string"
+          },
+          {
+            "name": "pool_balance",
+            "type": "u64"
+          }
+        ]
+      }
     }
   ]
 }

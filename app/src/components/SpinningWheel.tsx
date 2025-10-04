@@ -35,7 +35,7 @@ const SpinningWheel: React.FC = () => {
   const validationTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Admin public key - replace with your actual admin key
-  const ADMIN_PUBLIC_KEY = '3XAgZaouZthDRH8VNLRCZX1jifYei5zjNN99vs1bXRoR'
+  const ADMIN_PUBLIC_KEY = '79ZY4oAb2XfV7FwpZ6CVMKS9ca59pHvPHBngxnA3Hyv7'
   const isAdmin = publicKey?.toString() === ADMIN_PUBLIC_KEY
 
   // Wheel segments with exact multipliers: 0x 1.2x 0x 4x 0x 0x 1.2x 0x 2x 0x

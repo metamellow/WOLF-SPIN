@@ -3,7 +3,7 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import { useProgram } from '../hooks/useProgram'
 
 // Admin public key - replace with your actual admin key
-const ADMIN_PUBLIC_KEY = '3XAgZaouZthDRH8VNLRCZX1jifYei5zjNN99vs1bXRoR'
+const ADMIN_PUBLIC_KEY = '79ZY4oAb2XfV7FwpZ6CVMKS9ca59pHvPHBngxnA3Hyv7'
 
 interface AdminPanelProps {
   isOpen: boolean
@@ -12,11 +12,27 @@ interface AdminPanelProps {
 
 const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
   const { publicKey } = useWallet()
-  const { poolInfo, fundPool, loading, error } = useProgram()
+  const { poolInfo, fundPool, initializeGame, loading, error } = useProgram()
   const [fundAmount, setFundAmount] = useState('')
   const [isFunding, setIsFunding] = useState(false)
+  const [isInitializing, setIsInitializing] = useState(false)
 
   if (!isOpen) return null
+
+  const handleInitializeGame = async () => {
+    if (isInitializing) return
+
+    try {
+      setIsInitializing(true)
+      await initializeGame()
+      alert('Game initialized successfully! You can now fund the pool.')
+    } catch (err) {
+      console.error('Error initializing game:', err)
+      alert(`Error initializing game: ${err instanceof Error ? err.message : 'Unknown error'}`)
+    } finally {
+      setIsInitializing(false)
+    }
+  }
 
   const handleFundPool = async () => {
     if (!fundAmount || isFunding) return
@@ -48,52 +64,78 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        <div className="space-y-4">
-          {/* Pool Stats */}
+            <div className="space-y-4">
+              {/* Initialize Game Button */}
+              {!poolInfo && (
+                <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">
+                  <h3 className="font-semibold text-yellow-900 mb-2">⚠️ Game Not Initialized</h3>
+                  <p className="text-yellow-800 text-sm mb-4">
+                    The game needs to be initialized on the blockchain before it can be used.
+                  </p>
+                  <button
+                    onClick={handleInitializeGame}
+                    disabled={isInitializing || loading}
+                    className={`w-full font-semibold py-3 px-4 rounded-lg transition-colors ${
+                      !isInitializing && !loading
+                        ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
+                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    }`}
+                  >
+                    {isInitializing ? 'Initializing...' : 'Initialize Game'}
+                  </button>
+                </div>
+              )}
+
+              {/* Pool Stats */}
+              {poolInfo && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="font-semibold text-gray-900 mb-2">Pool Statistics</h3>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span>Balance:</span>
+                      <span className="font-mono">{(poolInfo.balance / 1e9).toFixed(2)} WOLF</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Min Bet:</span>
+                      <span className="font-mono">{(poolInfo.minBet / 1e9).toFixed(4)} WOLF</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Max Bet:</span>
+                      <span className="font-mono">{(poolInfo.maxBet / 1e9).toFixed(2)} WOLF</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+          {/* Fund Pool Section - Only show when game is initialized */}
           {poolInfo && (
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="font-semibold text-gray-900 mb-2">Pool Statistics</h3>
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span>Balance:</span>
-                  <span className="font-mono">{(poolInfo.balance / 1e9).toFixed(2)} WOLF</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Min Bet:</span>
-                  <span className="font-mono">{(poolInfo.minBet / 1e9).toFixed(4)} WOLF</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Max Bet:</span>
-                  <span className="font-mono">{(poolInfo.maxBet / 1e9).toFixed(2)} WOLF</span>
-                </div>
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Fund Pool Amount (WOLF)
+                </label>
+                <input
+                  type="number"
+                  value={fundAmount}
+                  onChange={(e) => setFundAmount(e.target.value)}
+                  placeholder="1000"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                />
               </div>
-            </div>
+
+              <button
+                onClick={handleFundPool}
+                disabled={!fundAmount || isFunding || loading}
+                className={`w-full font-semibold py-3 px-4 rounded-lg transition-colors ${
+                  fundAmount && !isFunding && !loading
+                    ? 'bg-black hover:bg-gray-800 text-white'
+                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                }`}
+              >
+                {isFunding ? 'Funding...' : 'Fund Pool'}
+              </button>
+            </>
           )}
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Fund Pool Amount (WOLF)
-            </label>
-            <input
-              type="number"
-              value={fundAmount}
-              onChange={(e) => setFundAmount(e.target.value)}
-              placeholder="1000"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-            />
-          </div>
-
-          <button
-            onClick={handleFundPool}
-            disabled={!fundAmount || isFunding || loading}
-            className={`w-full font-semibold py-3 px-4 rounded-lg transition-colors ${
-              fundAmount && !isFunding && !loading
-                ? 'bg-black hover:bg-gray-800 text-white'
-                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-            }`}
-          >
-            {isFunding ? 'Funding...' : 'Fund Pool'}
-          </button>
 
           {error && (
             <div className="text-red-600 text-sm">
@@ -101,9 +143,13 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
             </div>
           )}
 
-          <div className="text-xs text-gray-500 mt-4">
-            Connected as: {publicKey?.toString().slice(0, 8)}...
-          </div>
+              <div className="text-xs text-gray-500 mt-4 space-y-1">
+                <div>Connected as: {publicKey?.toString().slice(0, 8)}...</div>
+                <div>Program ID: 8sBBFZcLgMA8mXZCZ8q6L2o27sqSPJEqgSa9G2gvdKNu</div>
+                <div className="text-yellow-600 font-medium">
+                  ⚠️ Make sure this wallet deployed the program!
+                </div>
+              </div>
         </div>
       </div>
     </div>
