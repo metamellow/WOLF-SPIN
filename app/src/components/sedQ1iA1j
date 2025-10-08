@@ -1,0 +1,42 @@
+import React, { useState, useRef, useEffect } from 'react'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
+import { getAccount } from '@solana/spl-token'
+import confetti from 'canvas-confetti'
+import AdminPanel from './AdminPanel'
+import { useProgram } from '../hooks/useProgram'
+import { WOLF_TOKEN_MINT } from '../lib/program'
+
+interface WheelSegment {
+  color: string
+  label: string
+  multiplier: number
+  probability: number
+  angle: number
+}
+
+const SpinningWheel: React.FC = () => {
+  const { connected, publicKey } = useWallet()
+  const { 
+    gameState,
+    poolInfo, 
+    loading, 
+    error, 
+    spinWheel, 
+    fetchGameState 
+  } = useProgram()
+  
+  const [isSpinning, setIsSpinning] = useState(false)
+  const [totalRotation, setTotalRotation] = useState(0)
+  const [currentVisualPosition, setCurrentVisualPosition] = useState(0)
+  const [result, setResult] = useState<WheelSegment | null>(null)
+  const [betAmount, setBetAmount] = useState('0.1')
+  const [showAdminPanel, setShowAdminPanel] = useState(false)
+  const [isAdjusting, setIsAdjusting] = useState(false)
+  const [spinError, setSpinError] = useState<string | null>(null)
+  const [userWolfBalance, setUserWolfBalance] = useState<number>(0)
+  const wheelRef = useRef<HTMLDivElement>(null)
+  const validationTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Admin public key - replace with your actual admin key
+  const ADMIN_PUBLIC_KEY = '2tYc5PayMKR6uchCdg1K53ffsQdGBXziVpbBdhD72k6

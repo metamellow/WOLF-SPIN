@@ -11,6 +11,15 @@ const BettingWheel: React.FC = () => {
   const [result, setResult] = useState<any>(null)
   const [wheelRotation, setWheelRotation] = useState(0)
 
+  // Helper function to get outcome from multiplier
+  const getOutcomeFromMultiplier = (multiplier: number) => {
+    if (multiplier === 0) return 'LOSS'
+    if (multiplier === 120) return '1.2x'
+    if (multiplier === 200) return '2x'
+    if (multiplier === 400) return '4x'
+    return 'UNKNOWN'
+  }
+
   console.log('BettingWheel render:', { connected, gameState, poolInfo, loading, error })
 
   // Show a simple fallback if there's an error
@@ -74,7 +83,6 @@ const BettingWheel: React.FC = () => {
       // The result will be updated when the program emits the SpinResult event
       // For now, we'll show a success message
       setResult({
-        outcome: 'Transaction submitted',
         multiplier: 0,
         payout: 0,
         bet: bet / 1e9,
@@ -272,7 +280,7 @@ const BettingWheel: React.FC = () => {
                     <span className={`text-2xl font-bold ${
                       result.multiplier === 0 ? 'text-red-600' : 'text-green-600'
                     }`}>
-                      {result.outcome}
+                      {getOutcomeFromMultiplier(result.multiplier)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-3 border-b border-gray-200">

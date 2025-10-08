@@ -1,7 +1,8 @@
-export const IDL = {
-  "address": "8sBBFZcLgMA8mXZCZ8q6L2o27sqSPJEqgSa9G2gvdKNu",
+export const IDL = 
+{
+  "address": "AEU8yLzYQGrBHRod68Ud2CzpZikNq3L9eXbu5RUpGMSp",
   "metadata": {
-    "name": "spin_wheel",
+    "name": "wolf_spin_fresh",
     "version": "0.1.0",
     "spec": "0.1.0",
     "description": "Created with Anchor"
@@ -57,7 +58,7 @@ export const IDL = {
         },
         {
           "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          "address": "AEU8yLzYQGrBHRod68Ud2CzpZikNq3L9eXbu5RUpGMSp"
         }
       ],
       "args": [
@@ -118,15 +119,15 @@ export const IDL = {
         },
         {
           "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          "address": "AEU8yLzYQGrBHRod68Ud2CzpZikNq3L9eXbu5RUpGMSp"
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "AEU8yLzYQGrBHRod68Ud2CzpZikNq3L9eXbu5RUpGMSp"
         },
         {
           "name": "rent",
-          "address": "SysvarRent111111111111111111111111111111111"
+          "address": "AEU8yLzYQGrBHRod68Ud2CzpZikNq3L9eXbu5RUpGMSp"
         }
       ],
       "args": []
@@ -180,13 +181,18 @@ export const IDL = {
           "writable": true
         },
         {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
           "name": "player",
           "writable": true,
           "signer": true
         },
         {
           "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          "address": "AEU8yLzYQGrBHRod68Ud2CzpZikNq3L9eXbu5RUpGMSp"
         }
       ],
       "args": [
@@ -246,7 +252,7 @@ export const IDL = {
         },
         {
           "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          "address": "AEU8yLzYQGrBHRod68Ud2CzpZikNq3L9eXbu5RUpGMSp"
         }
       ],
       "args": [
@@ -290,48 +296,23 @@ export const IDL = {
   "errors": [
     {
       "code": 6000,
-      "name": "Unauthorized",
-      "msg": "Unauthorized: Only the authority can perform this action"
+      "name": "InvalidOperation",
+      "msg": "Invalid operation"
     },
     {
       "code": 6001,
-      "name": "BetTooLow",
-      "msg": "Bet amount is below minimum (0.1% of pool)"
+      "name": "InsufficientFunds",
+      "msg": "Insufficient funds"
     },
     {
       "code": 6002,
-      "name": "BetTooHigh",
-      "msg": "Bet amount exceeds maximum (ensures 4x payout ≤ 50% of pool)"
+      "name": "Unauthorized",
+      "msg": "Unauthorized"
     },
     {
       "code": 6003,
-      "name": "InsufficientPool",
-      "msg": "Insufficient funds in reward pool"
-    },
-    {
-      "code": 6004,
       "name": "CalculationError",
-      "msg": "Calculation error or overflow"
-    },
-    {
-      "code": 6005,
-      "name": "InvalidRewardPool",
-      "msg": "Invalid reward pool account"
-    },
-    {
-      "code": 6006,
-      "name": "InvalidMint",
-      "msg": "Invalid token mint"
-    },
-    {
-      "code": 6007,
-      "name": "InvalidTokenAccount",
-      "msg": "Invalid token account"
-    },
-    {
-      "code": 6008,
-      "name": "InvalidDevAccount",
-      "msg": "Invalid dev fee account"
+      "msg": "Calculation error"
     }
   ],
   "types": [
@@ -393,10 +374,6 @@ export const IDL = {
             "type": "u8"
           },
           {
-            "name": "outcome",
-            "type": "string"
-          },
-          {
             "name": "pool_balance",
             "type": "u64"
           }
@@ -404,6 +381,4 @@ export const IDL = {
       }
     }
   ]
-}
-
-export type SpinWheel = typeof IDL
+} as const;

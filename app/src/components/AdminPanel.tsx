@@ -3,7 +3,7 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import { useProgram } from '../hooks/useProgram'
 
 // Admin public key - replace with your actual admin key
-const ADMIN_PUBLIC_KEY = '79ZY4oAb2XfV7FwpZ6CVMKS9ca59pHvPHBngxnA3Hyv7'
+const ADMIN_PUBLIC_KEY = 'EohTDz5Hit8Y2zQHUKJW9kbPDjxpk5WRBsVxDX9B8iyz'
 
 interface AdminPanelProps {
   isOpen: boolean
@@ -28,11 +28,19 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
       alert('Game initialized successfully! You can now fund the pool.')
     } catch (err) {
       console.error('Error initializing game:', err)
-      alert(`Error initializing game: ${err instanceof Error ? err.message : 'Unknown error'}`)
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+      
+      // Check if it's a "already processed" error (which means success)
+      if (errorMessage.includes('already been processed')) {
+        alert('Game initialized successfully! (Transaction was already processed)')
+      } else {
+        alert(`Error initializing game: ${errorMessage}`)
+      }
     } finally {
       setIsInitializing(false)
     }
   }
+
 
   const handleFundPool = async () => {
     if (!fundAmount || isFunding) return
@@ -45,7 +53,15 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
       alert(`Successfully funded pool with ${fundAmount} WOLF tokens!`)
     } catch (err) {
       console.error('Error funding pool:', err)
-      alert(`Error funding pool: ${err instanceof Error ? err.message : 'Unknown error'}`)
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+      
+      // Check if it's a "already processed" error (which means success)
+      if (errorMessage.includes('already been processed')) {
+        alert(`Successfully funded pool with ${fundAmount} WOLF tokens! (Transaction was already processed)`)
+        setFundAmount('')
+      } else {
+        alert(`Error funding pool: ${errorMessage}`)
+      }
     } finally {
       setIsFunding(false)
     }
@@ -72,17 +88,22 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                   <p className="text-yellow-800 text-sm mb-4">
                     The game needs to be initialized on the blockchain before it can be used.
                   </p>
-                  <button
-                    onClick={handleInitializeGame}
-                    disabled={isInitializing || loading}
-                    className={`w-full font-semibold py-3 px-4 rounded-lg transition-colors ${
-                      !isInitializing && !loading
-                        ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
-                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    }`}
-                  >
-                    {isInitializing ? 'Initializing...' : 'Initialize Game'}
-                  </button>
+                  
+                  {/* Initialize Only */}
+                  <div className="mb-4">
+                    <button
+                      onClick={handleInitializeGame}
+                      disabled={isInitializing || loading}
+                      className={`w-full font-semibold py-3 px-4 rounded-lg transition-colors ${
+                        !isInitializing && !loading
+                          ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
+                          : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      }`}
+                    >
+                      {isInitializing ? 'Initializing...' : 'Initialize Game Only'}
+                    </button>
+                  </div>
+                  
                 </div>
               )}
 
@@ -145,7 +166,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
 
               <div className="text-xs text-gray-500 mt-4 space-y-1">
                 <div>Connected as: {publicKey?.toString().slice(0, 8)}...</div>
-                <div>Program ID: 8sBBFZcLgMA8mXZCZ8q6L2o27sqSPJEqgSa9G2gvdKNu</div>
+                <div>Program ID: AEU8yLzYQGrBHRod68Ud2CzpZikNq3L9eXbu5RUpGMSp</div>
                 <div className="text-yellow-600 font-medium">
                   ⚠️ Make sure this wallet deployed the program!
                 </div>

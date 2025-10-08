@@ -4,10 +4,10 @@ import type { WalletContextState } from '@solana/wallet-adapter-react'
 import { IDL } from '../idl/spin_wheel'
 
 // Program ID from deployed contract
-export const PROGRAM_ID = new PublicKey('8sBBFZcLgMA8mXZCZ8q6L2o27sqSPJEqgSa9G2gvdKNu')
+export const PROGRAM_ID = new PublicKey('AEU8yLzYQGrBHRod68Ud2CzpZikNq3L9eXbu5RUpGMSp')
 
-// WOLF Token Mint (Mainnet)
-export const WOLF_TOKEN_MINT = new PublicKey('7ctK21VZcJX1t1jiWLyWkSJk2Wm7xHYdsnWegzR6pump')
+// WOLF Token Mint (Devnet) - test token deployed
+export const WOLF_TOKEN_MINT = new PublicKey('5BM3bRG44QtKKfTfmxvue4GC4gbe4MsCmcDi8Zs8zy9U')
 
 // Devnet RPC endpoint
 const DEVNET_RPC = 'https://api.devnet.solana.com'
@@ -59,7 +59,7 @@ export const getGameStatePDA = (): [PublicKey, number] => {
 // Helper function to get reward pool PDA
 export const getRewardPoolPDA = (): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
-    [Buffer.from('game_state')],
+    [Buffer.from('reward_pool')],
     PROGRAM_ID
   )
 }

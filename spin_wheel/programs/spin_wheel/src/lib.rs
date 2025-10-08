@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Token, TokenAccount, Transfer, Mint};
 use anchor_lang::solana_program::hash::hash;
 
-declare_id!("8sBBFZcLgMA8mXZCZ8q6L2o27sqSPJEqgSa9G2gvdKNu");
+declare_id!("2Sdz9VvLEXNu9f3Gm8S1BWpPjX5ZYUW72mKjwpxB4Hac");
 
 #[program]
 pub mod spin_wheel {
@@ -16,6 +16,10 @@ pub mod spin_wheel {
         game_state.total_spins = 0;
         game_state.dev_fees_collected = 0;
         game_state.bump = ctx.bumps.game_state;
+        
+        // Note: Token authority transfer removed for simplicity
+        // The reward pool will be managed by the authority for now
+        
         Ok(())
     }
 
@@ -30,11 +34,11 @@ pub mod spin_wheel {
             .max(100_000); // Minimum 0.0001 tokens (100k lamports with 9 decimals)
         
         let max_bet = reward_pool_balance
-            .checked_div(8)
+            .checked_div(2)
             .ok_or(ErrorCode::CalculationError)?;
 
-        require!(bet_amount >= min_bet, ErrorCode::BetTooLow);
-        require!(bet_amount <= max_bet, ErrorCode::BetTooHigh);
+        require!(bet_amount >= min_bet, ErrorCode::InvalidOperation);
+        require!(bet_amount <= max_bet, ErrorCode::InvalidOperation);
 
         // Generate random number 0-99
         // NOTE: This is placeholder randomness for testing only
@@ -67,7 +71,7 @@ pub mod spin_wheel {
 
         // Validate payout doesn't exceed pool
         if payout > 0 {
-            require!(payout <= reward_pool_balance, ErrorCode::InsufficientPool);
+            require!(payout <= reward_pool_balance, ErrorCode::InsufficientFunds);
         }
 
         // Update state before transfers
@@ -86,10 +90,10 @@ pub mod spin_wheel {
             let cpi_accounts = Transfer {
                 from: ctx.accounts.reward_pool.to_account_info(),
                 to: ctx.accounts.player_token_account.to_account_info(),
-                authority: ctx.accounts.game_state.to_account_info(),
+                authority: ctx.accounts.authority.to_account_info(),
             };
             let cpi_program = ctx.accounts.token_program.to_account_info();
-            let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seeds);
+            let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
             token::transfer(cpi_ctx, payout)?;
 
             emit!(SpinResult {
@@ -98,7 +102,6 @@ pub mod spin_wheel {
                 multiplier: multiplier_percent,
                 payout,
                 random_number,
-                outcome: outcome_type.to_string(),
                 pool_balance: reward_pool_balance.checked_sub(payout).unwrap_or(0),
             });
         } else {
@@ -142,7 +145,6 @@ pub mod spin_wheel {
                 multiplier: 0,
                 payout: 0,
                 random_number,
-                outcome: outcome_type.to_string(),
                 pool_balance: reward_pool_balance.checked_add(to_pool).unwrap_or(reward_pool_balance),
             });
         }
@@ -160,7 +162,7 @@ pub mod spin_wheel {
 
         require!(
             amount <= ctx.accounts.reward_pool.amount,
-            ErrorCode::InsufficientPool
+            ErrorCode::InsufficientFunds
         );
 
         let seeds = &[
@@ -193,6 +195,7 @@ pub mod spin_wheel {
 
         Ok(())
     }
+
 }
 
 // Placeholder random number generator
@@ -205,7 +208,7 @@ fn generate_random_number(total_spins: &u64, player: &Pubkey) -> Result<u8> {
     data.extend_from_slice(&player.to_bytes());
     
     let random_seed = hash(&data);
-    Ok(random_seed.to_bytes()[0] % 100)
+    Ok(u8::from_le_bytes([random_seed.to_bytes()[0]]) % 100)
 }
 
 #[derive(Accounts)]
@@ -225,7 +228,7 @@ pub struct Initialize<'info> {
         init,
         payer = authority,
         token::mint = wolf_token_mint,
-        token::authority = game_state,
+        token::authority = authority,
     )]
     pub reward_pool: Account<'info, TokenAccount>,
     
@@ -247,24 +250,30 @@ pub struct Spin<'info> {
     
     #[account(
         mut,
-        constraint = reward_pool.key() == game_state.reward_pool @ ErrorCode::InvalidRewardPool,
-        constraint = reward_pool.mint == game_state.wolf_token_mint @ ErrorCode::InvalidMint,
+        constraint = reward_pool.key() == game_state.reward_pool @ ErrorCode::InvalidOperation,
+        constraint = reward_pool.mint == game_state.wolf_token_mint @ ErrorCode::InvalidOperation,
     )]
     pub reward_pool: Account<'info, TokenAccount>,
     
     #[account(
         mut,
-        constraint = player_token_account.mint == game_state.wolf_token_mint @ ErrorCode::InvalidMint,
-        constraint = player_token_account.owner == player.key() @ ErrorCode::InvalidTokenAccount,
+        constraint = player_token_account.mint == game_state.wolf_token_mint @ ErrorCode::InvalidOperation,
+        constraint = player_token_account.owner == player.key() @ ErrorCode::InvalidOperation,
     )]
     pub player_token_account: Account<'info, TokenAccount>,
     
     #[account(
         mut,
-        constraint = dev_fee_account.mint == game_state.wolf_token_mint @ ErrorCode::InvalidMint,
-        constraint = dev_fee_account.owner == game_state.authority @ ErrorCode::InvalidDevAccount,
+        constraint = dev_fee_account.mint == game_state.wolf_token_mint @ ErrorCode::InvalidOperation,
+        constraint = dev_fee_account.owner == game_state.authority @ ErrorCode::InvalidOperation,
     )]
     pub dev_fee_account: Account<'info, TokenAccount>,
+    
+    #[account(
+        mut,
+        constraint = authority.key() == game_state.authority @ ErrorCode::Unauthorized,
+    )]
+    pub authority: Signer<'info>,
     
     #[account(mut)]
     pub player: Signer<'info>,
@@ -281,14 +290,14 @@ pub struct WithdrawProfits<'info> {
     
     #[account(
         mut,
-        constraint = reward_pool.key() == game_state.reward_pool @ ErrorCode::InvalidRewardPool,
+        constraint = reward_pool.key() == game_state.reward_pool @ ErrorCode::InvalidOperation,
     )]
     pub reward_pool: Account<'info, TokenAccount>,
     
     #[account(
         mut,
-        constraint = authority_token_account.mint == game_state.wolf_token_mint @ ErrorCode::InvalidMint,
-        constraint = authority_token_account.owner == authority.key() @ ErrorCode::InvalidTokenAccount,
+        constraint = authority_token_account.mint == game_state.wolf_token_mint @ ErrorCode::InvalidOperation,
+        constraint = authority_token_account.owner == authority.key() @ ErrorCode::InvalidOperation,
     )]
     pub authority_token_account: Account<'info, TokenAccount>,
     
@@ -310,13 +319,13 @@ pub struct FundPool<'info> {
     
     #[account(
         mut,
-        constraint = reward_pool.key() == game_state.reward_pool @ ErrorCode::InvalidRewardPool,
+        constraint = reward_pool.key() == game_state.reward_pool @ ErrorCode::InvalidOperation,
     )]
     pub reward_pool: Account<'info, TokenAccount>,
     
     #[account(
         mut,
-        constraint = funder_token_account.mint == game_state.wolf_token_mint @ ErrorCode::InvalidMint,
+        constraint = funder_token_account.mint == game_state.wolf_token_mint @ ErrorCode::InvalidOperation,
     )]
     pub funder_token_account: Account<'info, TokenAccount>,
     
@@ -324,6 +333,8 @@ pub struct FundPool<'info> {
     pub funder: Signer<'info>,
     pub token_program: Program<'info, Token>,
 }
+
+
 
 #[account]
 pub struct GameState {
@@ -342,28 +353,17 @@ pub struct SpinResult {
     pub multiplier: u64,
     pub payout: u64,
     pub random_number: u8,
-    pub outcome: String,
     pub pool_balance: u64,
 }
 
 #[error_code]
 pub enum ErrorCode {
-    #[msg("Unauthorized: Only the authority can perform this action")]
+    #[msg("Invalid operation")]
+    InvalidOperation,
+    #[msg("Insufficient funds")]
+    InsufficientFunds,
+    #[msg("Unauthorized")]
     Unauthorized,
-    #[msg("Bet amount is below minimum (0.1% of pool)")]
-    BetTooLow,
-    #[msg("Bet amount exceeds maximum (ensures 4x payout ≤ 50% of pool)")]
-    BetTooHigh,
-    #[msg("Insufficient funds in reward pool")]
-    InsufficientPool,
-    #[msg("Calculation error or overflow")]
+    #[msg("Calculation error")]
     CalculationError,
-    #[msg("Invalid reward pool account")]
-    InvalidRewardPool,
-    #[msg("Invalid token mint")]
-    InvalidMint,
-    #[msg("Invalid token account")]
-    InvalidTokenAccount,
-    #[msg("Invalid dev fee account")]
-    InvalidDevAccount,
 }

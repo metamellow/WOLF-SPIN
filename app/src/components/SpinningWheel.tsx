@@ -1,9 +1,11 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
+import { getAccount } from '@solana/spl-token'
 import confetti from 'canvas-confetti'
 import AdminPanel from './AdminPanel'
 import { useProgram } from '../hooks/useProgram'
+import { WOLF_TOKEN_MINT } from '../lib/program'
 
 interface WheelSegment {
   color: string
@@ -16,6 +18,7 @@ interface WheelSegment {
 const SpinningWheel: React.FC = () => {
   const { connected, publicKey } = useWallet()
   const { 
+    gameState,
     poolInfo, 
     loading, 
     error, 
@@ -31,12 +34,54 @@ const SpinningWheel: React.FC = () => {
   const [showAdminPanel, setShowAdminPanel] = useState(false)
   const [isAdjusting, setIsAdjusting] = useState(false)
   const [spinError, setSpinError] = useState<string | null>(null)
+  const [userWolfBalance, setUserWolfBalance] = useState<number>(0)
   const wheelRef = useRef<HTMLDivElement>(null)
   const validationTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Admin public key - replace with your actual admin key
-  const ADMIN_PUBLIC_KEY = '79ZY4oAb2XfV7FwpZ6CVMKS9ca59pHvPHBngxnA3Hyv7'
+  const ADMIN_PUBLIC_KEY = 'EohTDz5Hit8Y2zQHUKJW9kbPDjxpk5WRBsVxDX9B8iyz'
   const isAdmin = publicKey?.toString() === ADMIN_PUBLIC_KEY
+
+  // Fetch user's WOLF balance
+  const fetchUserWolfBalance = async () => {
+    if (!publicKey) return
+    
+    try {
+      const { getAssociatedTokenAddress } = await import('@solana/spl-token')
+      const { Connection } = await import('@solana/web3.js')
+      
+      const connection = new Connection('https://api.devnet.solana.com', 'confirmed')
+      const userTokenAccount = await getAssociatedTokenAddress(WOLF_TOKEN_MINT, publicKey)
+      
+      try {
+        const account = await getAccount(connection, userTokenAccount)
+        setUserWolfBalance(Number(account.amount) / 1e9)
+      } catch (err) {
+        // Token account doesn't exist yet
+        setUserWolfBalance(0)
+      }
+    } catch (err) {
+      console.error('Error fetching WOLF balance:', err)
+      setUserWolfBalance(0)
+    }
+  }
+
+  // Fetch WOLF balance when wallet connects
+  useEffect(() => {
+    if (connected && publicKey) {
+      fetchUserWolfBalance()
+    } else {
+      setUserWolfBalance(0)
+    }
+  }, [connected, publicKey])
+
+  // Set default bet amount to min bet when pool info is available
+  useEffect(() => {
+    if (poolInfo && betAmount === '0.1') {
+      const minBet = poolInfo.minBet / 1e9
+      setBetAmount(minBet.toString())
+    }
+  }, [poolInfo])
 
   // Wheel segments with exact multipliers: 0x 1.2x 0x 4x 0x 0x 1.2x 0x 2x 0x
   const segments: WheelSegment[] = [
@@ -52,10 +97,10 @@ const SpinningWheel: React.FC = () => {
     { color: '#ffffff', label: '0x', multiplier: 0, probability: 10, angle: 36 }, // White background
   ]
 
-  // 10 equal sectors of 36° each (0-360°)
+  // 10 equal sectors of 36° each, but starting from -90° (matching conic-gradient)
   const VALUE_SECTORS = Array.from({ length: 10 }, (_, i) => ({
-    start: i * 36,
-    end: (i + 1) * 36,
+    start: -90 + (i * 36),
+    end: -90 + ((i + 1) * 36),
     value: i
   }))
 
@@ -72,7 +117,11 @@ const SpinningWheel: React.FC = () => {
   const getValueSectorCenter = (targetValue: number): number => {
     const sector = VALUE_SECTORS.find(s => s.value === targetValue)
     if (!sector) throw new Error(`Invalid value: ${targetValue}`)
-    return (sector.start + sector.end) / 2
+    // Calculate center of the sector
+    // Since the pointer is at 0°, we need to rotate the wheel so the center
+    // of the target sector ends up at 0° (under the pointer)
+    const center = (sector.start + sector.end) / 2
+    return center
   }
 
   // Bet validation and auto-adjustment with delay
@@ -107,11 +156,18 @@ const SpinningWheel: React.FC = () => {
         setBetAmount(maxBet.toString())
         setTimeout(() => setIsAdjusting(false), 1000)
       }
-    }, 1000) // 1 second delay
+    }, 2000) // 2 second delay
   }
+
 
   const handleSpin = async () => {
     if (!connected || !betAmount || isSpinning) return
+
+    // Check if game is initialized
+    if (!gameState) {
+      setSpinError('Game not initialized. Please initialize the game first.')
+      return
+    }
 
     setIsSpinning(true)
     setResult(null)
@@ -124,31 +180,70 @@ const SpinningWheel: React.FC = () => {
       console.log('Spinning with bet amount:', betAmountLamports, 'lamports')
 
       // Call blockchain spin
-      const tx = await spinWheel(betAmountLamports)
-      console.log('Spin transaction:', tx)
+      let spinResponse
+      try {
+        spinResponse = await spinWheel(betAmountLamports)
+        console.log('Spin transaction:', spinResponse.tx)
+        console.log('🎯 ACTUAL BLOCKCHAIN RESULT:', spinResponse.result)
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to spin wheel'
+        
+        // Check if it's a "already processed" error (which means success)
+        if (errorMessage.includes('already been processed')) {
+          console.log('Transaction already processed - this means it succeeded!')
+          
+          // For now, we'll show a loss since we can't easily determine the result from the error case
+          // Balance updates will happen after the wheel animation completes
+          spinResponse = {
+            tx: 'already-processed',
+            result: {
+              isWin: false,
+              multiplier: 0,
+              payout: 0,
+              segment: '0x'
+            }
+          }
+          console.log('🎯 USING DEFAULT LOSS RESULT for already processed transaction')
+        } else {
+          throw err // Re-throw other errors
+        }
+      }
+      
+      // Game state and balance updates will happen after the wheel animation completes
 
-      // For now, we'll use a random result since the blockchain doesn't return the result directly
-      // In a real implementation, you'd listen for the SpinResult event
-      const randomIndex = Math.floor(Math.random() * segments.length)
-      const selectedSegment = segments[randomIndex]
+      // Use the actual result from the blockchain
+      const actualResult = spinResponse.result
+      const selectedSegment = segments.find(s => s.label === actualResult.segment) || segments[0]
+      const randomIndex = segments.findIndex(s => s.label === actualResult.segment)
 
-      console.log('Selected segment:', selectedSegment.label, 'at index:', randomIndex)
+      console.log('🎯 USING ACTUAL RESULT:', selectedSegment.label, 'at index:', randomIndex)
 
       // Step 1: Calculate target position
       const targetSectorCenter = getValueSectorCenter(randomIndex)
       
-      // Add random offset for natural feel (±5°)
-      const randomOffset = (Math.random() - 0.5) * 10
-      const finalTarget = targetSectorCenter + randomOffset
-      
-      // Clamp to stay within sector bounds
+      // The issue: we want the center of the sector to be under the pointer (at 0°)
+      // But our current calculation puts the edge under the pointer
+      // We need to rotate the wheel so the center of the target sector ends up at 0°
       const targetSector = VALUE_SECTORS[randomIndex]
-      const clampedTarget = Math.max(
-        targetSector.start + 2, 
-        Math.min(targetSector.end - 2, finalTarget)
-      )
+      
+      // The conic-gradient starts from -90°, so the first segment is at -90° to -54°
+      // The pointer is at 0°, so we need to rotate the wheel so the center of the
+      // target sector ends up at 0° (under the pointer)
+      // Since the sector center is at targetSectorCenter, we need to rotate by
+      // (0 - targetSectorCenter) degrees to bring the center to 0°
+      let baseTarget = (0 - targetSectorCenter) % 360
+      
+      // Add random variance (±8°) for more natural-looking results
+      // but keep it well within the sector bounds (36° per sector)
+      const variance = (Math.random() - 0.5) * 16 // ±8 degrees
+      const clampedTarget = (baseTarget + variance) % 360
 
-      console.log('Target sector center:', targetSectorCenter, 'Clamped target:', clampedTarget)
+      console.log('🎯 VISUAL POSITIONING:')
+      console.log('  Target sector center:', targetSectorCenter, '°')
+      console.log('  Base target:', baseTarget.toFixed(2), '°')
+      console.log('  Random variance:', variance.toFixed(2), '°')
+      console.log('  Final target (with variance):', clampedTarget.toFixed(2), '°')
+      console.log('  Sector bounds:', targetSector.start, '° to', targetSector.end, '°')
 
       // Step 2: Calculate required rotation
       const requiredRotation = calculateClockwisePath(currentVisualPosition, clampedTarget)
@@ -184,8 +279,9 @@ const SpinningWheel: React.FC = () => {
           })
         }
         
-        // Refresh pool info after spin
+        // Refresh all balances after spin animation completes
         fetchGameState()
+        fetchUserWolfBalance()
       }, 3000)
 
     } catch (err) {
@@ -250,7 +346,7 @@ const SpinningWheel: React.FC = () => {
                       className="w-full h-full rounded-full border-4 border-gray-200 overflow-hidden relative"
                       style={{ 
                         transform: `rotate(${totalRotation}deg)`,
-                        transition: isSpinning ? 'transform 3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
+                        transition: isSpinning ? 'transform 3s cubic-bezier(0.17, 0.67, 0.12, 0.99)' : 'none',
                     background: `conic-gradient(
                       from -90deg,
                       #000000 0deg 36deg,
@@ -312,9 +408,14 @@ const SpinningWheel: React.FC = () => {
             
             {/* Bet Amount Input */}
             <div className="mb-6">
-              <label className="block text-gray-800 text-sm font-semibold mb-3">
-                Bet Amount
-              </label>
+              <div className="flex justify-between items-center mb-3">
+                <label className="block text-gray-800 text-sm font-semibold">
+                  Bet Amount
+                </label>
+                <div className="text-sm text-gray-600">
+                  Balance: <span className="font-semibold text-black">{userWolfBalance.toFixed(2)} WOLF</span>
+                </div>
+              </div>
               <div className="relative">
                 <input
                   type="number"
