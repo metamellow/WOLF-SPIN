@@ -263,6 +263,7 @@ export const useProgram = () => {
           devFeeAccount,
           authority: publicKey, // Add authority account
           player: publicKey,
+          recentBlockhashes: anchor.web3.SYSVAR_RECENT_BLOCKHASHES_PUBKEY,
           tokenProgram: TOKEN_PROGRAM_ID,
         })
         .rpc()

@@ -1,4 +1,3 @@
-import React from 'react'
 import { WalletProvider } from './components/WalletProvider'
 import SpinningWheel from './components/SpinningWheel'
 

@@ -3,7 +3,7 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import { useProgram } from '../hooks/useProgram'
 
 // Admin public key - replace with your actual admin key
-const ADMIN_PUBLIC_KEY = 'EohTDz5Hit8Y2zQHUKJW9kbPDjxpk5WRBsVxDX9B8iyz'
+const ADMIN_PUBLIC_KEY = 'EHmXDsmVYp47dp1ZzcrC8bFHCwCEgpwbqPmYCGU8znMH'
 
 interface AdminPanelProps {
   isOpen: boolean
@@ -166,7 +166,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
 
               <div className="text-xs text-gray-500 mt-4 space-y-1">
                 <div>Connected as: {publicKey?.toString().slice(0, 8)}...</div>
-                <div>Program ID: AEU8yLzYQGrBHRod68Ud2CzpZikNq3L9eXbu5RUpGMSp</div>
+                <div>Program ID: 8vMotdQTcxhgXfUQdoJTqoFaAKLjJsTxw4iP4yGvGiHY</div>
                 <div className="text-yellow-600 font-medium">
                   ⚠️ Make sure this wallet deployed the program!
                 </div>

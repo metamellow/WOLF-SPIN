@@ -7,6 +7,10 @@ import AdminPanel from './AdminPanel'
 import { useProgram } from '../hooks/useProgram'
 import { WOLF_TOKEN_MINT } from '../lib/program'
 
+// Audio files
+const spinSound = new Audio('/assets/spin.mp3')
+const winSound = new Audio('/assets/win.mp3')
+
 interface WheelSegment {
   color: string
   label: string
@@ -39,8 +43,33 @@ const SpinningWheel: React.FC = () => {
   const validationTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Admin public key - replace with your actual admin key
-  const ADMIN_PUBLIC_KEY = 'EohTDz5Hit8Y2zQHUKJW9kbPDjxpk5WRBsVxDX9B8iyz'
+  const ADMIN_PUBLIC_KEY = 'EHmXDsmVYp47dp1ZzcrC8bFHCwCEgpwbqPmYCGU8znMH'
   const isAdmin = publicKey?.toString() === ADMIN_PUBLIC_KEY
+
+  // Preload audio files on component mount
+  useEffect(() => {
+    const preloadAudio = async () => {
+      try {
+        spinSound.preload = 'auto'
+        winSound.preload = 'auto'
+        await Promise.all([
+          new Promise((resolve) => {
+            spinSound.addEventListener('canplaythrough', resolve, { once: true })
+            spinSound.load()
+          }),
+          new Promise((resolve) => {
+            winSound.addEventListener('canplaythrough', resolve, { once: true })
+            winSound.load()
+          })
+        ])
+        console.log('🎵 Audio files preloaded successfully')
+      } catch (error) {
+        console.warn('⚠️ Failed to preload audio files:', error)
+      }
+    }
+    
+    preloadAudio()
+  }, [])
 
   // Fetch user's WOLF balance
   const fetchUserWolfBalance = async () => {
@@ -169,6 +198,23 @@ const SpinningWheel: React.FC = () => {
       return
     }
 
+    // Client-side bet validation with browser alerts
+    if (poolInfo) {
+      const minBet = poolInfo.minBet / 1e9
+      const maxBet = poolInfo.maxBet / 1e9
+      const betValue = parseFloat(betAmount)
+      
+      if (betValue < minBet) {
+        alert(`Bet is under the MINIMUM.\nMinimum bet: ${minBet.toFixed(4)} WOLF`)
+        return
+      }
+      
+      if (betValue > maxBet) {
+        alert(`Bet is over the MAXIMUM.\nMaximum bet: ${maxBet.toFixed(2)} WOLF`)
+        return
+      }
+    }
+
     setIsSpinning(true)
     setResult(null)
     setSpinError(null)
@@ -185,6 +231,14 @@ const SpinningWheel: React.FC = () => {
         spinResponse = await spinWheel(betAmountLamports)
         console.log('Spin transaction:', spinResponse.tx)
         console.log('🎯 ACTUAL BLOCKCHAIN RESULT:', spinResponse.result)
+        
+        // Play spin sound when wheel actually starts spinning (after transaction)
+        try {
+          spinSound.currentTime = 0
+          await spinSound.play()
+        } catch (error) {
+          console.warn('Failed to play spin sound:', error)
+        }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to spin wheel'
         
@@ -269,8 +323,17 @@ const SpinningWheel: React.FC = () => {
         setResult(selectedSegment)
         setIsSpinning(false)
         
-        // Trigger confetti if player wins
+        // Play win sound and trigger confetti if player wins
         if (selectedSegment.multiplier > 0) {
+          // Play win sound
+          try {
+            winSound.currentTime = 0
+            winSound.play().catch(error => console.warn('Failed to play win sound:', error))
+          } catch (error) {
+            console.warn('Failed to play win sound:', error)
+          }
+          
+          // Trigger confetti
           confetti({
             particleCount: 100,
             spread: 70,

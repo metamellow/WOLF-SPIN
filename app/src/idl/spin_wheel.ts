@@ -1,6 +1,6 @@
 export const IDL = 
 {
-  "address": "AEU8yLzYQGrBHRod68Ud2CzpZikNq3L9eXbu5RUpGMSp",
+  "address": "8vMotdQTcxhgXfUQdoJTqoFaAKLjJsTxw4iP4yGvGiHY",
   "metadata": {
     "name": "wolf_spin_fresh",
     "version": "0.1.0",
@@ -58,7 +58,7 @@ export const IDL =
         },
         {
           "name": "token_program",
-          "address": "AEU8yLzYQGrBHRod68Ud2CzpZikNq3L9eXbu5RUpGMSp"
+          "address": "8vMotdQTcxhgXfUQdoJTqoFaAKLjJsTxw4iP4yGvGiHY"
         }
       ],
       "args": [
@@ -119,15 +119,15 @@ export const IDL =
         },
         {
           "name": "token_program",
-          "address": "AEU8yLzYQGrBHRod68Ud2CzpZikNq3L9eXbu5RUpGMSp"
+          "address": "8vMotdQTcxhgXfUQdoJTqoFaAKLjJsTxw4iP4yGvGiHY"
         },
         {
           "name": "system_program",
-          "address": "AEU8yLzYQGrBHRod68Ud2CzpZikNq3L9eXbu5RUpGMSp"
+          "address": "8vMotdQTcxhgXfUQdoJTqoFaAKLjJsTxw4iP4yGvGiHY"
         },
         {
           "name": "rent",
-          "address": "AEU8yLzYQGrBHRod68Ud2CzpZikNq3L9eXbu5RUpGMSp"
+          "address": "8vMotdQTcxhgXfUQdoJTqoFaAKLjJsTxw4iP4yGvGiHY"
         }
       ],
       "args": []
@@ -191,8 +191,12 @@ export const IDL =
           "signer": true
         },
         {
+          "name": "recent_blockhashes",
+          "address": "8vMotdQTcxhgXfUQdoJTqoFaAKLjJsTxw4iP4yGvGiHY"
+        },
+        {
           "name": "token_program",
-          "address": "AEU8yLzYQGrBHRod68Ud2CzpZikNq3L9eXbu5RUpGMSp"
+          "address": "8vMotdQTcxhgXfUQdoJTqoFaAKLjJsTxw4iP4yGvGiHY"
         }
       ],
       "args": [
@@ -252,7 +256,7 @@ export const IDL =
         },
         {
           "name": "token_program",
-          "address": "AEU8yLzYQGrBHRod68Ud2CzpZikNq3L9eXbu5RUpGMSp"
+          "address": "8vMotdQTcxhgXfUQdoJTqoFaAKLjJsTxw4iP4yGvGiHY"
         }
       ],
       "args": [

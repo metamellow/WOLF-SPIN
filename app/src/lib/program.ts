@@ -4,13 +4,14 @@ import type { WalletContextState } from '@solana/wallet-adapter-react'
 import { IDL } from '../idl/spin_wheel'
 
 // Program ID from deployed contract
-export const PROGRAM_ID = new PublicKey('AEU8yLzYQGrBHRod68Ud2CzpZikNq3L9eXbu5RUpGMSp')
+export const PROGRAM_ID = new PublicKey('8vMotdQTcxhgXfUQdoJTqoFaAKLjJsTxw4iP4yGvGiHY')
 
 // WOLF Token Mint (Devnet) - test token deployed
 export const WOLF_TOKEN_MINT = new PublicKey('5BM3bRG44QtKKfTfmxvue4GC4gbe4MsCmcDi8Zs8zy9U')
 
-// Devnet RPC endpoint
-const DEVNET_RPC = 'https://api.devnet.solana.com'
+// RPC endpoint
+// const DEVNET_RPC = 'https://api.devnet.solana.com'
+const MAINNET_RPC = 'https://api.mainnet-beta.solana.com'
 
 export interface ProgramContext {
   program: Program
@@ -26,7 +27,7 @@ export const createProgram = (wallet: WalletContextState): ProgramContext | null
     }
 
     console.log('createProgram: Creating program context...')
-    const connection = new Connection(DEVNET_RPC, 'confirmed')
+    const connection = new Connection(MAINNET_RPC, 'confirmed')
     
     const provider = new AnchorProvider(
       connection,
